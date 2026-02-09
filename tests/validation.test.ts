@@ -31,7 +31,7 @@ describe("Neutron SDK", () => {
       const neutron = new Neutron({
         apiKey: "key",
         apiSecret: "secret",
-        baseUrl: "https://enapi.npay.dev",
+        baseUrl: "https://api.neutron.me",
       });
       expect(neutron).toBeDefined();
     });

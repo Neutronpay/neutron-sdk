@@ -6,7 +6,7 @@ import {
   NeutronTimeoutError,
 } from "./errors.js";
 
-const DEFAULT_BASE_URL = "https://enapi.npay.live";
+const DEFAULT_BASE_URL = "https://api.neutron.me";
 const DEFAULT_TIMEOUT = 30_000;
 const DEFAULT_MAX_RETRIES = 2;
 const TOKEN_REFRESH_BUFFER_MS = 60_000; // refresh 1 min before expiry

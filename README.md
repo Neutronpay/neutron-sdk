@@ -300,7 +300,7 @@ try {
 const neutron = new Neutron({
   apiKey: "your-api-key",       // Required
   apiSecret: "your-api-secret", // Required
-  baseUrl: "https://enapi.npay.dev",  // Sandbox (default: enapi.npay.live)
+  baseUrl: "https://api.neutron.me",  // Custom API URL (default: api.neutron.me)
   timeout: 15000,               // Request timeout in ms (default: 30000)
   maxRetries: 3,                // Retry attempts for 5xx/429 (default: 2)
   debug: true,                  // Log requests to stderr

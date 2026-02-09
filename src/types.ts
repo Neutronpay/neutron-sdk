@@ -5,7 +5,7 @@ export interface NeutronConfig {
   apiKey: string;
   /** Your Neutron API secret */
   apiSecret: string;
-  /** API base URL (default: https://enapi.npay.live) */
+  /** API base URL (default: https://api.neutron.me) */
   baseUrl?: string;
   /** Request timeout in ms (default: 30000) */
   timeout?: number;
