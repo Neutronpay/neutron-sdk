@@ -11,6 +11,10 @@ The official TypeScript/Node.js SDK for [Neutron](https://neutron.me) — Bitcoi
 npm install neutron-sdk
 ```
 
+## Prerequisites
+
+Sign up at [portal.neutron.me](https://portal.neutron.me) to get your API key and secret.
+
 ## Quick Start
 
 ```typescript
