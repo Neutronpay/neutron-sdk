@@ -40,10 +40,10 @@
   "homepage": "https://neutron.me",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/neutroncreative/neutron-sdk.git"
+    "url": "git+https://github.com/Neutronpay/neutron-sdk.git"
   },
   "bugs": {
-    "url": "https://github.com/neutroncreative/neutron-sdk/issues"
+    "url": "https://github.com/Neutronpay/neutron-sdk/issues"
   },
   "engines": {
     "node": ">=18.0.0"
