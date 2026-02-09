@@ -1,5 +1,6 @@
 import type { HttpClient } from "../client.js";
 import type { Account, Wallet } from "../types.js";
+import { sanitizePathParam } from "../sanitize.js";
 
 export class AccountResource {
   constructor(private readonly client: HttpClient) {}
@@ -26,6 +27,7 @@ export class AccountResource {
    * Get a specific wallet by ID.
    */
   async wallet(walletId: string): Promise<Wallet> {
+    sanitizePathParam(walletId, "walletId");
     const accountId = await this.client.ensureAuthAndGetAccountId();
     const res = await this.client.get(`/api/v2/account/${accountId}/wallet/${walletId}`);
     return (res.data ?? res) as Wallet;

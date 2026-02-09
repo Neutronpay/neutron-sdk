@@ -4,6 +4,7 @@ import type {
   CreateTransactionRequest,
   ListTransactionsParams,
 } from "../types.js";
+import { sanitizePathParam } from "../sanitize.js";
 
 export class TransactionsResource {
   constructor(private readonly client: HttpClient) {}
@@ -41,6 +42,7 @@ export class TransactionsResource {
    * After confirmation, Lightning invoices become payable and sends are dispatched.
    */
   async confirm(txnId: string): Promise<Transaction> {
+    sanitizePathParam(txnId, "txnId");
     return this.client.put<Transaction>(`/api/v2/transaction/${txnId}/confirm`);
   }
 
@@ -48,6 +50,7 @@ export class TransactionsResource {
    * Get transaction status and details.
    */
   async get(txnId: string): Promise<Transaction> {
+    sanitizePathParam(txnId, "txnId");
     return this.client.get<Transaction>(`/api/v2/transaction/${txnId}`);
   }
 
@@ -73,6 +76,7 @@ export class TransactionsResource {
    * Cancel a quoted (unconfirmed) transaction.
    */
   async cancel(txnId: string): Promise<Transaction> {
+    sanitizePathParam(txnId, "txnId");
     return this.client.put<Transaction>(`/api/v2/transaction/${txnId}/cancel`);
   }
 

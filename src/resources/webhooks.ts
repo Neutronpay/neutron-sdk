@@ -2,6 +2,7 @@ import crypto from "crypto";
 import type { HttpClient } from "../client.js";
 import type { Webhook, CreateWebhookParams, UpdateWebhookParams } from "../types.js";
 import { NeutronValidationError } from "../errors.js";
+import { sanitizePathParam } from "../sanitize.js";
 
 export class WebhooksResource {
   constructor(private readonly client: HttpClient) {}
@@ -31,6 +32,7 @@ export class WebhooksResource {
    * Update a webhook's callback URL or secret.
    */
   async update(webhookId: string, params: UpdateWebhookParams): Promise<Webhook> {
+    sanitizePathParam(webhookId, "webhookId");
     return this.client.put<Webhook>(`/api/v2/webhook/${webhookId}`, params);
   }
 
@@ -38,6 +40,7 @@ export class WebhooksResource {
    * Delete a webhook.
    */
   async delete(webhookId: string): Promise<void> {
+    sanitizePathParam(webhookId, "webhookId");
     await this.client.del(`/api/v2/webhook/${webhookId}`);
   }
 

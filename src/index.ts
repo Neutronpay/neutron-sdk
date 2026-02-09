@@ -84,6 +84,8 @@ export { RatesResource } from "./resources/rates.js";
 export { FiatResource } from "./resources/fiat.js";
 export type { FiatPayoutParams } from "./resources/fiat.js";
 
+export { sanitizePathParam } from "./sanitize.js";
+
 export {
   NeutronError,
   NeutronApiError,

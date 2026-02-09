@@ -1,5 +1,6 @@
 import type { HttpClient } from "../client.js";
 import type { FiatInstitution, Transaction, SourceOfFunds } from "../types.js";
+import { sanitizePathParam } from "../sanitize.js";
 
 export interface FiatPayoutParams {
   /** Source currency (e.g. "BTC") */
@@ -38,6 +39,7 @@ export class FiatResource {
    * // [{ code: "970422", name: "MB Bank" }, ...]
    */
   async institutions(countryCode: string): Promise<FiatInstitution[]> {
+    sanitizePathParam(countryCode, "countryCode");
     const res = await this.client.get(
       `/api/v2/reference/fiat-institution/by-country/${countryCode}`
     );
