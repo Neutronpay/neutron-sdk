@@ -1,6 +1,6 @@
 {
   "name": "neutron-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Official Neutron SDK — Bitcoin Lightning, stablecoins, and fiat payments for Node.js and TypeScript",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -37,7 +37,7 @@
   ],
   "author": "Neutron <support@neutron.me>",
   "license": "MIT",
-  "homepage": "https://neutron.me",
+  "homepage": "https://docs.neutron.me",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Neutronpay/neutron-sdk.git"
