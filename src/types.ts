@@ -152,35 +152,6 @@ export interface LightningInvoice {
   status: TransactionState;
 }
 
-export interface DecodedInvoice {
-  amount?: number;
-  amountMsat?: number;
-  expiry?: number;
-  destination?: string;
-  description?: string;
-  paymentHash?: string;
-  status?: string;
-  [key: string]: any;
-}
-
-export interface LightningAddressInfo {
-  tag?: string;
-  callback?: string;
-  minSendable?: number;
-  maxSendable?: number;
-  metadata?: string;
-  [key: string]: any;
-}
-
-export interface LnurlInfo {
-  tag?: string;
-  callback?: string;
-  minSendable?: number;
-  maxSendable?: number;
-  k1?: string;
-  [key: string]: any;
-}
-
 // ── Receive Addresses ───────────────────────────────────────
 
 export interface BtcAddress {

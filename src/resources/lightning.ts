@@ -2,9 +2,6 @@ import type { HttpClient } from "../client.js";
 import type {
   CreateInvoiceParams,
   LightningInvoice,
-  DecodedInvoice,
-  LightningAddressInfo,
-  LnurlInfo,
   Transaction,
 } from "../types.js";
 import { NeutronValidationError } from "../errors.js";
@@ -123,34 +120,4 @@ export class LightningResource {
     });
   }
 
-  /**
-   * Decode a BOLT11 invoice to inspect it before paying.
-   * Returns amount, expiry, destination node, description, and payment status.
-   */
-  async decodeInvoice(invoice: string): Promise<DecodedInvoice> {
-    return this.client.get<DecodedInvoice>(
-      `/api/v2/lightning/invoice?invoice=${encodeURIComponent(invoice)}`
-    );
-  }
-
-  /**
-   * Resolve a Lightning Address (user@domain.com) to check if it exists
-   * and get min/max sendable amounts.
-   *
-   * @param amountMsat Optional: get a specific invoice for this amount (in millisatoshis)
-   */
-  async resolveAddress(address: string, amountMsat?: number): Promise<LightningAddressInfo> {
-    let path = `/api/v2/lightning/resolve-ln-address?lnAddress=${encodeURIComponent(address)}`;
-    if (amountMsat !== undefined) path += `&amount=${amountMsat}`;
-    return this.client.get<LightningAddressInfo>(path);
-  }
-
-  /**
-   * Resolve an LNURL string to see its type (pay/withdraw/channel) and parameters.
-   */
-  async resolveLnurl(lnurl: string): Promise<LnurlInfo> {
-    return this.client.get<LnurlInfo>(
-      `/api/v2/lightning/resolve-lnurl?lnurl=${encodeURIComponent(lnurl)}`
-    );
-  }
 }

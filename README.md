@@ -181,24 +181,6 @@ await neutron.webhooks.update(webhook.id, { callback: "https://myapp.com/v2/webh
 await neutron.webhooks.delete(webhook.id);
 ```
 
-### Lightning Utilities
-
-```typescript
-// Decode an invoice before paying
-const decoded = await neutron.lightning.decodeInvoice("lnbc100u1p...");
-console.log(decoded.amount, decoded.expiry);
-
-// Verify a Lightning Address exists
-const info = await neutron.lightning.resolveAddress("alice@getalby.com");
-console.log(info.minSendable, info.maxSendable);
-
-// Resolve an LNURL
-const lnurl = await neutron.lightning.resolveLnurl("lnurl1dp68gurn...");
-console.log(lnurl.tag); // "payRequest" or "withdrawRequest"
-```
-
----
-
 ## Verify Webhook Signatures
 
 One-liner verification — no client instance needed:
