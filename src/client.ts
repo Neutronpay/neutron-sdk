@@ -151,8 +151,8 @@ export class HttpClient {
       this.log(`${method} ${path}`);
       const headers: Record<string, string> = {
         Authorization: `Bearer ${this.accessToken}`,
+        "Content-Type": "application/json",
       };
-      if (body) headers["Content-Type"] = "application/json";
 
       const response = await this.rawFetch(url, {
         method,

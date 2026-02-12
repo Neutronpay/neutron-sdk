@@ -74,10 +74,14 @@ export class TransactionsResource {
 
   /**
    * Cancel a quoted (unconfirmed) transaction.
+   *
+   * @deprecated This endpoint is not currently available on the Neutron API.
+   * Unconfirmed transactions expire automatically after their TTL.
    */
-  async cancel(txnId: string): Promise<Transaction> {
-    sanitizePathParam(txnId, "txnId");
-    return this.client.put<Transaction>(`/api/v2/transaction/${txnId}/cancel`);
+  async cancel(_txnId: string): Promise<Transaction> {
+    throw new Error(
+      "transactions.cancel() is not available. Unconfirmed transactions expire automatically."
+    );
   }
 
   /**

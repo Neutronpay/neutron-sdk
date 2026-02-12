@@ -115,7 +115,7 @@ export class LightningResource {
       destReq: {
         ccy: "BTC",
         method: "lnurl",
-        reqDetails: { lnurl: address },
+        reqDetails: { address },
       },
     });
   }
