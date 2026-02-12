@@ -47,7 +47,8 @@ export class FiatResource {
   }
 
   /**
-   * Create a fiat payout transaction. Handles KYC and source of funds automatically.
+   * Create a fiat payout transaction. KYC is required only for fiat payouts — not for
+   * Bitcoin, stablecoins, or swaps. Handles KYC and source of funds automatically.
    * Returns a quoted transaction — call `neutron.transactions.confirm()` to execute.
    *
    * @example

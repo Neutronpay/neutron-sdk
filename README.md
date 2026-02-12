@@ -297,7 +297,7 @@ const neutron = new Neutron({
 - **Two-step flow**: `.create()` returns a quote → `.confirm()` executes it.
 - **Set amount on one side only** — `sourceReq` OR `destReq`, not both.
 - **`createInvoice()` auto-confirms** — no second step needed for receiving.
-- **KYC only for fiat payouts**. Lightning, on-chain, and stablecoin transfers don't require KYC.
+- **KYC only for fiat payouts**. Bitcoin (Lightning + on-chain), stablecoins (USDT on TRON/ETH), and swaps require **no KYC**.
 - **Token management is automatic** — the SDK authenticates on first request and refreshes as needed.
 
 ---
