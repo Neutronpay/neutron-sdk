@@ -124,6 +124,7 @@ export type {
   ListTransactionsParams,
   CreateInvoiceParams,
   LightningInvoice,
+  DecodedInvoice,
   BtcAddress,
   UsdtAddress,
   Webhook,

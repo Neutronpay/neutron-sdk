@@ -1,6 +1,7 @@
 import type { HttpClient } from "../client.js";
 import type {
   CreateInvoiceParams,
+  DecodedInvoice,
   LightningInvoice,
   Transaction,
 } from "../types.js";
@@ -118,6 +119,23 @@ export class LightningResource {
         reqDetails: { address },
       },
     });
+  }
+
+  /**
+   * Decode a Lightning invoice (BOLT11) to inspect amount, description, etc.
+   * Useful for showing users what they're about to pay before confirming.
+   *
+   * @example
+   * const decoded = await neutron.lightning.decodeInvoice("lnbc100u1p...");
+   * console.log(decoded.amount);      // 0.001 (BTC)
+   * console.log(decoded.description); // "Coffee payment"
+   */
+  async decodeInvoice(invoice: string): Promise<DecodedInvoice> {
+    const result = await this.client.post<{ invoice: DecodedInvoice }>(
+      `/api/v2/decode/lightning`,
+      { paymentRequest: invoice }
+    );
+    return result.invoice;
   }
 
 }

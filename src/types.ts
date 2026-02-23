@@ -152,6 +152,23 @@ export interface LightningInvoice {
   status: TransactionState;
 }
 
+export interface DecodedInvoice {
+  /** Amount in BTC (may be undefined if invoice has no amount) */
+  amount?: number;
+  /** Invoice description/memo */
+  description?: string;
+  /** Payment hash */
+  paymentHash?: string;
+  /** Destination node pubkey */
+  destination?: string;
+  /** Invoice timestamp */
+  timestamp?: number;
+  /** Invoice expiry in seconds */
+  expiry?: number;
+  /** Raw invoice string */
+  invoice: string;
+}
+
 // ── Receive Addresses ───────────────────────────────────────
 
 export interface BtcAddress {

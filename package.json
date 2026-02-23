@@ -1,6 +1,6 @@
 {
   "name": "neutron-sdk",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Official Neutron SDK — Bitcoin Lightning, stablecoins, and fiat payments for Node.js and TypeScript",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
