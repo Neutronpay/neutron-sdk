@@ -167,6 +167,8 @@ export interface DecodedInvoice {
   expiry?: number;
   /** Raw invoice string */
   invoice: string;
+  /** Invoice status (e.g., "valid", "expired") */
+  status?: string;
 }
 
 // ── Receive Addresses ───────────────────────────────────────
