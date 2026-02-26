@@ -122,6 +122,7 @@ export type {
   PaymentMethod as PaymentMethodString,
   CreateTransactionRequest,
   ListTransactionsParams,
+  TransactionEvent,
   CreateInvoiceParams,
   LightningInvoice,
   DecodedInvoice,

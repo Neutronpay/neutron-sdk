@@ -130,6 +130,19 @@ export interface ListTransactionsParams {
   offset?: number;
 }
 
+// ── SSE Events ─────────────────────────────────────────────
+
+/**
+ * A real-time transaction status event delivered via SSE.
+ * NOTE: Requires the server-side endpoint /api/v2/events/stream (not yet live).
+ */
+export interface TransactionEvent {
+  transactionId: string;
+  status: string;
+  timestamp: string;
+  data?: Record<string, unknown>;
+}
+
 // ── Lightning ───────────────────────────────────────────────
 
 export interface CreateInvoiceParams {

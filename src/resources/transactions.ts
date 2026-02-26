@@ -3,6 +3,7 @@ import type {
   Transaction,
   CreateTransactionRequest,
   ListTransactionsParams,
+  TransactionEvent,
 } from "../types.js";
 import { sanitizePathParam } from "../sanitize.js";
 
@@ -128,5 +129,56 @@ export class TransactionsResource {
     }
 
     throw new Error(`Transaction ${txnId} did not complete within ${timeout}ms`);
+  }
+
+  /**
+   * Stream real-time transaction status updates via SSE.
+   * For agents without a public endpoint who can't receive webhook POSTs.
+   *
+   * NOTE: Requires the server-side endpoint /api/v2/events/stream (not yet live).
+   * Use neutron.transactions.waitForCompletion() as a polling fallback in the meantime.
+   *
+   * @example
+   * for await (const event of neutron.transactions.subscribe("txn-123")) {
+   *   console.log(event.status);
+   *   if (event.status === "completed") break;
+   * }
+   */
+  async *subscribe(transactionId: string, timeoutMs = 60_000): AsyncGenerator<TransactionEvent> {
+    const url = `${this.client.baseUrl}/api/v2/events/stream?transactionId=${transactionId}`;
+    const response = await fetch(url, {
+      headers: {
+        "Accept": "text/event-stream",
+        ...(await this.client.getAuthHeaders()),
+      },
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error(`SSE connection failed: ${response.status} ${response.statusText}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              yield JSON.parse(line.slice(6)) as TransactionEvent;
+            } catch {}
+          }
+        }
+      }
+    } finally {
+      reader.cancel();
+    }
   }
 }

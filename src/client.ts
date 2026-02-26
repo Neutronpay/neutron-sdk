@@ -115,6 +115,17 @@ export class HttpClient {
     return this.accountId!;
   }
 
+  /**
+   * Returns auth headers for use in raw fetch calls (e.g. SSE streams).
+   * Ensures a valid token is present before returning.
+   */
+  async getAuthHeaders(): Promise<Record<string, string>> {
+    await this.ensureAuth();
+    return {
+      Authorization: `Bearer ${this.accessToken}`,
+    };
+  }
+
   // ── HTTP ──────────────────────────────────────────────
 
   private async rawFetch(url: string, init: RequestInit): Promise<Response> {
