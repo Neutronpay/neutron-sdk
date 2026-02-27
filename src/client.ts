@@ -33,6 +33,25 @@ export class HttpClient {
     this.timeout = config.timeout ?? DEFAULT_TIMEOUT;
     this.maxRetries = config.maxRetries ?? DEFAULT_MAX_RETRIES;
     this.debug = config.debug ?? false;
+
+    // SECURITY: validate baseUrl to prevent SSRF
+    this.validateBaseUrl(this.baseUrl);
+  }
+
+  private validateBaseUrl(url: string): void {
+    try {
+      const u = new URL(url);
+      if (u.protocol !== "https:") {
+        throw new NeutronAuthError("baseUrl must use HTTPS");
+      }
+      const blocked = ["localhost", "127.", "0.0.0.0", "169.254.", "10.", "192.168.", "172."];
+      if (blocked.some(b => u.hostname.startsWith(b))) {
+        throw new NeutronAuthError(`baseUrl blocked: ${u.hostname}`);
+      }
+    } catch (e) {
+      if (e instanceof NeutronAuthError) throw e;
+      throw new NeutronAuthError(`Invalid baseUrl: ${url}`);
+    }
   }
 
   private log(message: string, data?: any): void {
