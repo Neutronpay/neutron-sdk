@@ -3,6 +3,7 @@ import type {
   Transaction,
   CreateTransactionRequest,
   ListTransactionsParams,
+  TransactionEvent,
 } from "../types.js";
 import { sanitizePathParam } from "../sanitize.js";
 
@@ -128,5 +129,79 @@ export class TransactionsResource {
     }
 
     throw new Error(`Transaction ${txnId} did not complete within ${timeout}ms`);
+  }
+
+  /**
+   * Stream real-time transaction status updates via SSE.
+   * For agents without a public endpoint who can't receive webhook POSTs.
+   *
+   * NOTE: Requires the server-side endpoint /api/v2/events/stream (not yet live).
+   * Use neutron.transactions.waitForCompletion() as a polling fallback in the meantime.
+   *
+   * @example
+   * for await (const event of neutron.transactions.subscribe("txn-123")) {
+   *   console.log(event.status);
+   *   if (event.status === "completed") break;
+   * }
+   */
+  async *subscribe(transactionId: string, timeoutMs = 60_000): AsyncGenerator<TransactionEvent> {
+    // SECURITY: sanitize input — consistent with all other resource methods
+    sanitizePathParam(transactionId, "transactionId");
+
+    // SECURITY: validate transactionId is a UUID to prevent SSRF/path traversal
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(transactionId)) {
+      throw new Error("Invalid transactionId: must be a UUID.");
+    }
+
+    // SECURITY: clamp timeout to 5s–300s to prevent resource exhaustion
+    const clampedTimeout = Math.min(Math.max(timeoutMs, 5_000), 300_000);
+
+    // SECURITY: encodeURIComponent — UUID chars are safe but be explicit
+    const url = `${this.client.baseUrl}/api/v2/events/stream?transactionId=${encodeURIComponent(transactionId)}`;
+    const response = await fetch(url, {
+      headers: {
+        "Accept": "text/event-stream",
+        ...(await this.client.getAuthHeaders()),
+      },
+      signal: AbortSignal.timeout(clampedTimeout),
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error(`SSE connection failed: ${response.status} ${response.statusText}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    const MAX_BUFFER = 64 * 1024; // 64KB — prevent OOM from malformed stream
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // SECURITY: abort on unbounded buffer growth
+        if (buffer.length > MAX_BUFFER) {
+          throw new Error("SSE buffer overflow — server sent malformed stream.");
+        }
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              yield JSON.parse(line.slice(6)) as TransactionEvent;
+            } catch (parseErr) {
+              // Log malformed SSE data but keep the stream alive
+              console.error("[neutron-sdk] SSE parse error:", parseErr);
+            }
+          }
+        }
+      }
+    } finally {
+      reader.cancel();
+    }
   }
 }
