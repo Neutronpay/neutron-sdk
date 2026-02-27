@@ -145,6 +145,9 @@ export class TransactionsResource {
    * }
    */
   async *subscribe(transactionId: string, timeoutMs = 60_000): AsyncGenerator<TransactionEvent> {
+    // SECURITY: sanitize input — consistent with all other resource methods
+    sanitizePathParam(transactionId, "transactionId");
+
     // SECURITY: validate transactionId is a UUID to prevent SSRF/path traversal
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!UUID_RE.test(transactionId)) {
@@ -154,8 +157,8 @@ export class TransactionsResource {
     // SECURITY: clamp timeout to 5s–300s to prevent resource exhaustion
     const clampedTimeout = Math.min(Math.max(timeoutMs, 5_000), 300_000);
 
-    // Safe: transactionId validated as UUID above
-    const url = `${this.client.baseUrl}/api/v2/events/stream?transactionId=${transactionId}`;
+    // SECURITY: encodeURIComponent — UUID chars are safe but be explicit
+    const url = `${this.client.baseUrl}/api/v2/events/stream?transactionId=${encodeURIComponent(transactionId)}`;
     const response = await fetch(url, {
       headers: {
         "Accept": "text/event-stream",
@@ -171,12 +174,19 @@ export class TransactionsResource {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    const MAX_BUFFER = 64 * 1024; // 64KB — prevent OOM from malformed stream
 
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
+
+        // SECURITY: abort on unbounded buffer growth
+        if (buffer.length > MAX_BUFFER) {
+          throw new Error("SSE buffer overflow — server sent malformed stream.");
+        }
+
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
         for (const line of lines) {
@@ -185,7 +195,7 @@ export class TransactionsResource {
               yield JSON.parse(line.slice(6)) as TransactionEvent;
             } catch (parseErr) {
               // Log malformed SSE data but keep the stream alive
-              console.error("[SSE] Failed to parse event data:", parseErr);
+              console.error("[neutron-sdk] SSE parse error:", parseErr);
             }
           }
         }
