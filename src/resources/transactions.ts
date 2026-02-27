@@ -145,13 +145,23 @@ export class TransactionsResource {
    * }
    */
   async *subscribe(transactionId: string, timeoutMs = 60_000): AsyncGenerator<TransactionEvent> {
+    // SECURITY: validate transactionId is a UUID to prevent SSRF/path traversal
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(transactionId)) {
+      throw new Error("Invalid transactionId: must be a UUID.");
+    }
+
+    // SECURITY: clamp timeout to 5s–300s to prevent resource exhaustion
+    const clampedTimeout = Math.min(Math.max(timeoutMs, 5_000), 300_000);
+
+    // Safe: transactionId validated as UUID above
     const url = `${this.client.baseUrl}/api/v2/events/stream?transactionId=${transactionId}`;
     const response = await fetch(url, {
       headers: {
         "Accept": "text/event-stream",
         ...(await this.client.getAuthHeaders()),
       },
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: AbortSignal.timeout(clampedTimeout),
     });
 
     if (!response.ok || !response.body) {
@@ -173,7 +183,10 @@ export class TransactionsResource {
           if (line.startsWith("data: ")) {
             try {
               yield JSON.parse(line.slice(6)) as TransactionEvent;
-            } catch {}
+            } catch (parseErr) {
+              // Log malformed SSE data but keep the stream alive
+              console.error("[SSE] Failed to parse event data:", parseErr);
+            }
           }
         }
       }
