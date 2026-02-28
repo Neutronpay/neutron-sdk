@@ -112,8 +112,8 @@ export class HttpClient {
       ? result.expiredAt
       : new Date(result.expiredAt).getTime();
 
-    return result;
     this.log("Authenticated", { accountId: this.accountId });
+    return result;
   }
 
   private async ensureAuth(): Promise<void> {
