@@ -19,6 +19,18 @@ export interface FiatPayoutParams {
   recipientName: string;
   /** Recipient country code (e.g. "VN") */
   countryCode: string;
+  /** Recipient address (optional, defaults to "N/A") */
+  recipientAddress?: string;
+  /** Recipient phone (optional, defaults to "N/A") */
+  recipientPhone?: string;
+  /** Sender legal full name — pulled from account KYC if not provided */
+  senderName?: string;
+  /** Sender country code — pulled from account if not provided */
+  senderCountryCode?: string;
+  /** Sender address — pulled from account KYC if not provided */
+  senderAddress?: string;
+  /** Sender phone — pulled from account KYC if not provided */
+  senderPhone?: string;
   /** "individual" or "business" (default: "individual") */
   kycType?: "individual" | "business";
   /** Source of funds declaration */
@@ -73,6 +85,15 @@ export class FiatResource {
         method: "neutronpay",
         amtRequested: params.sourceAmount,
         reqDetails: {},
+        kyc: {
+          type: params.kycType || "individual",
+          details: {
+            legalFullName: params.senderName || "Account Holder",
+            countryCode: params.senderCountryCode || "VN",
+            address1: params.senderAddress || "N/A",
+            contactNumber: params.senderPhone || "N/A",
+          },
+        },
       },
       destReq: {
         ccy: params.destCcy,
@@ -86,6 +107,8 @@ export class FiatResource {
           details: {
             legalFullName: params.recipientName,
             countryCode: params.countryCode,
+            address1: params.recipientAddress || "N/A",
+            contactNumber: params.recipientPhone || "N/A",
           },
         },
       },
