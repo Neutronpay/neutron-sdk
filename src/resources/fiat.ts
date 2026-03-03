@@ -23,7 +23,7 @@ export interface FiatPayoutParams {
   recipientAddress?: string;
   /** Recipient phone (optional, defaults to "N/A") */
   recipientPhone?: string;
-  /** Sender legal full name — pulled from account KYC if not provided */
+  /** Sender legal full name — use beneficialAccountName || legalFullName || displayName from account */
   senderName?: string;
   /** Sender country code — pulled from account if not provided */
   senderCountryCode?: string;
