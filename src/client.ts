@@ -5,6 +5,7 @@ import {
   NeutronAuthError,
   NeutronTimeoutError,
 } from "./errors.js";
+import { L402Manager, type L402Token } from "./resources/l402.js";
 
 const DEFAULT_BASE_URL = "https://api.neutron.me";
 const DEFAULT_TIMEOUT = 30_000;
@@ -22,6 +23,10 @@ export class HttpClient {
   private accessToken: string | null = null;
   private accountId: string | null = null;
   private tokenExpiry: number = 0;
+
+  // L402
+  private l402Manager: L402Manager | null = null;
+  private l402PayFn: ((invoice: string) => Promise<string>) | null = null;
 
   constructor(config: NeutronConfig) {
     if (!config.apiKey) throw new NeutronAuthError("apiKey is required");
@@ -194,6 +199,37 @@ export class HttpClient {
         return (await response.json()) as T;
       }
 
+      // L402 — auto-pay if enabled
+      if (response.status === 402 && this.l402Manager && this.l402PayFn) {
+        const wwwAuth = response.headers.get("www-authenticate") || "";
+        if (wwwAuth.startsWith("L402 ")) {
+          try {
+            const challenge = this.l402Manager.parseChallenge(wwwAuth);
+            this.log("L402 challenge received", { amountSats: challenge.amountSats, path });
+            const preimage = await this.l402PayFn(challenge.invoice);
+            const token: L402Token = { macaroon: challenge.macaroon, preimage };
+            this.l402Manager.storeToken(path, token);
+            // Inject L402 auth and retry immediately (don't count as a retry)
+            const l402Headers: Record<string, string> = {
+              Authorization: `Bearer ${this.accessToken}`,
+              "Content-Type": "application/json",
+              "X-L402-Token": this.l402Manager.buildAuthHeader(token),
+            };
+            const retryResponse = await this.rawFetch(`${this.baseUrl}${path}`, {
+              method,
+              headers: l402Headers,
+              body: body ? JSON.stringify(body) : undefined,
+            });
+            if (retryResponse.ok) {
+              return (await retryResponse.json()) as T;
+            }
+          } catch (l402Err) {
+            this.log("L402 payment failed", { error: l402Err });
+            // Fall through to normal error handling
+          }
+        }
+      }
+
       const errorBody = await response.json().catch(() => ({}));
       const apiError = new NeutronApiError(response.status, errorBody);
 
@@ -214,6 +250,31 @@ export class HttpClient {
     }
 
     throw lastError;
+  }
+
+  /**
+   * Enable L402 automatic payment handling.
+   * When enabled, the client will automatically pay 402 challenges using the provided function.
+   *
+   * @param payFn - Receives a BOLT11 invoice, returns the payment preimage hex
+   *
+   * @example
+   * neutron.enableL402(async (invoice) => {
+   *   const result = await neutron.lightning.payInvoice(invoice);
+   *   return result.preimage;
+   * });
+   */
+  enableL402(payFn: (invoice: string) => Promise<string>): void {
+    this.l402Manager = new L402Manager();
+    this.l402PayFn = payFn;
+  }
+
+  /** Access the L402 manager directly for manual flows */
+  get l402(): L402Manager {
+    if (!this.l402Manager) {
+      this.l402Manager = new L402Manager();
+    }
+    return this.l402Manager;
   }
 
   async get<T = any>(path: string): Promise<T> {

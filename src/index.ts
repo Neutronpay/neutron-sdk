@@ -85,6 +85,8 @@ export { FiatResource } from "./resources/fiat.js";
 export type { FiatPayoutParams } from "./resources/fiat.js";
 
 export { sanitizePathParam } from "./sanitize.js";
+export { L402Manager, parseL402Challenge, buildL402AuthHeader } from "./resources/l402.js";
+export type { L402Challenge, L402Token } from "./resources/l402.js";
 
 export {
   NeutronError,
