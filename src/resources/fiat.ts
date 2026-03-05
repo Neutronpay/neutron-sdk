@@ -21,7 +21,7 @@ export interface FiatPayoutParams {
   countryCode: string;
   /** Recipient address (optional, defaults to "N/A") */
   recipientAddress?: string;
-  /** Recipient phone (optional, defaults to "N/A") */
+  /** Recipient phone in E.164 format — MUST include country prefix (e.g. "+628123456789" for Indonesia, "+84912345678" for Vietnam). Omit or pass "N/A" if unknown. */
   recipientPhone?: string;
   /** Sender legal full name — use beneficialAccountName || legalFullName || displayName from account */
   senderName?: string;
@@ -29,7 +29,7 @@ export interface FiatPayoutParams {
   senderCountryCode?: string;
   /** Sender address — pulled from account KYC if not provided */
   senderAddress?: string;
-  /** Sender phone — pulled from account KYC if not provided */
+  /** Sender phone in E.164 format — MUST include country prefix (e.g. "+628123456789" for Indonesia, "+84912345678" for Vietnam). Omit or pass "N/A" if unknown. */
   senderPhone?: string;
   /** "individual" or "business" (default: "individual") */
   kycType?: "individual" | "business";
@@ -78,6 +78,24 @@ export class FiatResource {
    * await neutron.transactions.confirm(txn.txnId);
    */
   async payout(params: FiatPayoutParams): Promise<Transaction> {
+    // Normalise phone numbers to E.164 format
+    const countryPrefixes: Record<string, string> = {
+      VN: "+84", ID: "+62", TH: "+66", SG: "+65", MY: "+60", PH: "+63",
+    };
+    const normalisePhone = (phone: string | undefined, country: string): string => {
+      if (!phone || phone === "N/A") return "N/A";
+      if (phone.startsWith("+")) return phone;
+      const prefix = countryPrefixes[country.toUpperCase()];
+      if (prefix) return prefix + phone.replace(/^0/, "");
+      return phone;
+    };
+    const destCountry = params.countryCode?.toUpperCase() || "VN";
+    const srcCountry = params.senderCountryCode?.toUpperCase() || destCountry;
+    params = {
+      ...params,
+      recipientPhone: normalisePhone(params.recipientPhone, destCountry),
+      senderPhone: normalisePhone(params.senderPhone, srcCountry),
+    };
     return this.client.post<Transaction>(`/api/v2/transaction`, {
       extRefId: params.extRefId,
       sourceReq: {
@@ -89,7 +107,7 @@ export class FiatResource {
           type: params.kycType || "individual",
           details: {
             legalFullName: params.senderName || "Account Holder",
-            countryCode: params.senderCountryCode || "VN",
+            countryCode: params.senderCountryCode || params.countryCode || "VN",
             address1: params.senderAddress || "N/A",
             contactNumber: params.senderPhone || "N/A",
           },
